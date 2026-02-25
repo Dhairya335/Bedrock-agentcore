@@ -60,7 +60,7 @@ pipeline {
       steps {
         dir("${WORKSPACE}/${REPO_NAME}") {
           sh '''
-            docker build -t astrolimeagent:${IMAGE_TAG} .
+            podman build -t astrolimeagent:${IMAGE_TAG} .
           '''
         }
       }
@@ -72,28 +72,20 @@ pipeline {
           aws ecr get-login-password \
             --region ${AWS_REGION} \
             --profile ${AWS_PROFILE} \
-          | docker login \
+          | podman login \
             --username AWS \
             --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
         '''
       }
     }
 
-    stage('Tag Image') {
+    stage('Tag Image and push to ECR') {
       steps {
         sh '''
-          docker tag astrolimeagent:${IMAGE_TAG} ${IMAGE_URI}
+          podman tag astrolimeagent:${IMAGE_TAG} ${IMAGE_URI}
+          podman push ${IMAGE_URI}
         '''
       }
     }
-
-    stage('Push Image to ECR') {
-      steps {
-        sh '''
-          docker push ${IMAGE_URI}
-        '''
-      }
-    }
-
   }
 }
